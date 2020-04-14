@@ -5,35 +5,36 @@
 # used throughout the Twitter classes. Special care has been taken to make
 # sure these reular expressions work with Tweets in all languages.
 import re, string
+import functools
 
 REGEXEN = {} # :nodoc:
 
 def regex_range(start, end = None):
     if end:
-        return u'%s-%s' % (unichr(start), unichr(end))
+        return u'%s-%s' % (chr(start), chr(end))
     else:
-        return u'%s' % unichr(start)
+        return u'%s' % chr(start)
 
 # Space is more than %20, U+3000 for example is the full-width space used with Kanji. Provide a short-hand
 # to access both the list of characters and a pattern suitible for use with String#split
 #  Taken from: ActiveSupport::Multibyte::Handlers::UTF8Handler::UNICODE_WHITESPACE
 UNICODE_SPACES = []
-for space in reduce(lambda x,y: x + y if type(y) == list else x + [y], [
-        range(0x0009, 0x000D),  # White_Space # Cc   [5] <control-0009>..<control-000D>
+for space in functools.reduce(lambda x,y: x + y if type(y) == list else x + [y], [
+        list(range(0x0009, 0x000D)),  # White_Space # Cc   [5] <control-0009>..<control-000D>
         0x0020,                 # White_Space # Zs       SPACE
         0x0085,                 # White_Space # Cc       <control-0085>
         0x00A0,                 # White_Space # Zs       NO-BREAK SPACE
         0x1680,                 # White_Space # Zs       OGHAM SPACE MARK
         0x180E,                 # White_Space # Zs       MONGOLIAN VOWEL SEPARATOR
-        range(0x2000, 0x200A),  # White_Space # Zs  [11] EN QUAD..HAIR SPACE
+        list(range(0x2000, 0x200A)),  # White_Space # Zs  [11] EN QUAD..HAIR SPACE
         0x2028,                 # White_Space # Zl       LINE SEPARATOR
         0x2029,                 # White_Space # Zp       PARAGRAPH SEPARATOR
         0x202F,                 # White_Space # Zs       NARROW NO-BREAK SPACE
         0x205F,                 # White_Space # Zs       MEDIUM MATHEMATICAL SPACE
         0x3000,                 # White_Space # Zs       IDEOGRAPHIC SPACE
     ]):
-    UNICODE_SPACES.append(unichr(space))
-REGEXEN['spaces'] = re.compile(ur''.join(UNICODE_SPACES))
+    UNICODE_SPACES.append(chr(space))
+REGEXEN['spaces'] = re.compile(r''.join(UNICODE_SPACES))
 
 # Characters not allowed in Tweets
 INVALID_CHARACTERS  =   [
@@ -41,9 +42,9 @@ INVALID_CHARACTERS  =   [
     0xFFFF,                                 # Special
     0x202A, 0x202B, 0x202C, 0x202D, 0x202E, # Directional change
 ]
-REGEXEN['invalid_control_characters']   =   [unichr(x) for x in INVALID_CHARACTERS]
+REGEXEN['invalid_control_characters']   =   [chr(x) for x in INVALID_CHARACTERS]
 
-REGEXEN['list_name'] = re.compile(ur'^[a-zA-Z][a-zA-Z0-9_\-\u0080-\u00ff]{0,24}$')
+REGEXEN['list_name'] = re.compile(r'^[a-zA-Z][a-zA-Z0-9_\-\u0080-\u00ff]{0,24}$')
 
 # Latin accented characters
 # Excludes 0xd7 from the range (the multiplication sign, confusable with "x").
@@ -67,7 +68,7 @@ LATIN_ACCENTS = [
     regex_range(0x0300, 0x036f),
     regex_range(0x1e00, 0x1eff),
 ]
-REGEXEN['latin_accents'] = re.compile(ur''.join(LATIN_ACCENTS), re.IGNORECASE | re.UNICODE)
+REGEXEN['latin_accents'] = re.compile(r''.join(LATIN_ACCENTS), re.IGNORECASE | re.UNICODE)
 LATIN_ACCENTS = u''.join(LATIN_ACCENTS)
 
 RTL_CHARACTERS = ''.join([
@@ -147,69 +148,69 @@ except ValueError:
     # this is a narrow python build so these extended Kanji characters won't work
     pass
 
-PUNCTUATION_CHARS = ur'!"#$%&\'()*+,-./:;<=>?@\[\]^_\`{|}~'
-SPACE_CHARS = ur" \t\n\x0B\f\r"
-CTRL_CHARS = ur"\x00-\x1F\x7F"
+PUNCTUATION_CHARS = r'!"#$%&\'()*+,-./:;<=>?@\[\]^_\`{|}~'
+SPACE_CHARS = r" \t\n\x0B\f\r"
+CTRL_CHARS = r"\x00-\x1F\x7F"
 
 # A hashtag must contain latin characters, numbers and underscores, but not all numbers.
-HASHTAG_ALPHA = ur'[a-z_%s]' % (LATIN_ACCENTS + NON_LATIN_HASHTAG_CHARS + CJ_HASHTAG_CHARACTERS)
-HASHTAG_ALPHANUMERIC = ur'[a-z0-9_%s]' % (LATIN_ACCENTS + NON_LATIN_HASHTAG_CHARS + CJ_HASHTAG_CHARACTERS)
-HASHTAG_BOUNDARY = ur'\A|\z|\[|[^&a-z0-9_%s]' % (LATIN_ACCENTS + NON_LATIN_HASHTAG_CHARS + CJ_HASHTAG_CHARACTERS)
+HASHTAG_ALPHA = r'[a-z_%s]' % (LATIN_ACCENTS + NON_LATIN_HASHTAG_CHARS + CJ_HASHTAG_CHARACTERS)
+HASHTAG_ALPHANUMERIC = r'[a-z0-9_%s]' % (LATIN_ACCENTS + NON_LATIN_HASHTAG_CHARS + CJ_HASHTAG_CHARACTERS)
+HASHTAG_BOUNDARY = r'\A|\Z|\[|[^&a-z0-9_%s]' % (LATIN_ACCENTS + NON_LATIN_HASHTAG_CHARS + CJ_HASHTAG_CHARACTERS)
 
-HASHTAG = re.compile(ur'(%s)(#|＃)(%s*%s%s*)' % (HASHTAG_BOUNDARY, HASHTAG_ALPHANUMERIC, HASHTAG_ALPHA, HASHTAG_ALPHANUMERIC), re.IGNORECASE)
+HASHTAG = re.compile(r'(%s)(#|＃)(%s*%s%s*)' % (HASHTAG_BOUNDARY, HASHTAG_ALPHANUMERIC, HASHTAG_ALPHA, HASHTAG_ALPHANUMERIC), re.IGNORECASE)
 
 REGEXEN['valid_hashtag'] = HASHTAG
-REGEXEN['end_hashtag_match'] = re.compile(ur'\A(?:[#＃]|:\/\/)', re.IGNORECASE | re.UNICODE)
-REGEXEN['numeric_only'] = re.compile(ur'^[\d]+$')
+REGEXEN['end_hashtag_match'] = re.compile(r'\A(?:[#＃]|:\/\/)', re.IGNORECASE | re.UNICODE)
+REGEXEN['numeric_only'] = re.compile(r'^[\d]+$')
 
 REGEXEN['valid_mention_preceding_chars'] = re.compile(r'(?:[^a-zA-Z0-9_!#\$%&*@＠]|^|RT:?)')
-REGEXEN['at_signs'] = re.compile(ur'[@＠]')
+REGEXEN['at_signs'] = re.compile(r'[@＠]')
 REGEXEN['valid_mention_or_list'] = re.compile(
-    ur'(%s)' % REGEXEN['valid_mention_preceding_chars'].pattern.decode('utf-8') +   # preceding character
-    ur'(%s)' % REGEXEN['at_signs'].pattern +                                        # at mark
-    ur'([a-zA-Z0-9_]{1,20})' +                                                      # screen name
-    ur'(\/[a-zA-Z][a-zA-Z0-9_\-]{0,24})?'                                           # list (optional)
+    r'(%s)' % REGEXEN['valid_mention_preceding_chars'].pattern +   # preceding character
+    r'(%s)' % REGEXEN['at_signs'].pattern +                                        # at mark
+    r'([a-zA-Z0-9_]{1,20})' +                                                      # screen name
+    r'(\/[a-zA-Z][a-zA-Z0-9_\-]{0,24})?'                                           # list (optional)
 )
-REGEXEN['valid_reply'] = re.compile(ur'^(?:[%s])*%s([a-zA-Z0-9_]{1,20})' % (REGEXEN['spaces'].pattern, REGEXEN['at_signs'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_reply'] = re.compile(r'^(?:[%s])*%s([a-zA-Z0-9_]{1,20})' % (REGEXEN['spaces'].pattern, REGEXEN['at_signs'].pattern), re.IGNORECASE | re.UNICODE)
  # Used in Extractor for final filtering
-REGEXEN['end_mention_match'] = re.compile(ur'\A(?:%s|[%s]|:\/\/)' % (REGEXEN['at_signs'].pattern, REGEXEN['latin_accents'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['end_mention_match'] = re.compile(r'\A(?:%s|[%s]|:\/\/)' % (REGEXEN['at_signs'].pattern, REGEXEN['latin_accents'].pattern), re.IGNORECASE | re.UNICODE)
 
 # URL related hash regex collection
-REGEXEN['valid_url_preceding_chars'] = re.compile(ur'(?:[^A-Z0-9@＠$#＃%s]|^)' % ur''.join(REGEXEN['invalid_control_characters']), re.IGNORECASE | re.UNICODE)
-REGEXEN['invalid_url_without_protocol_preceding_chars'] = re.compile(ur'[-_.\/]$')
-DOMAIN_VALID_CHARS = ur'[^%s%s%s%s%s]' % (PUNCTUATION_CHARS, SPACE_CHARS, CTRL_CHARS, ur''.join(REGEXEN['invalid_control_characters']), ur''.join(UNICODE_SPACES))
-REGEXEN['valid_subdomain'] = re.compile(ur'(?:(?:%s(?:[_-]|%s)*)?%s\.)' % (DOMAIN_VALID_CHARS, DOMAIN_VALID_CHARS, DOMAIN_VALID_CHARS), re.IGNORECASE | re.UNICODE)
-REGEXEN['valid_domain_name'] = re.compile(ur'(?:(?:%s(?:[-]|%s)*)?%s\.)' % (DOMAIN_VALID_CHARS, DOMAIN_VALID_CHARS, DOMAIN_VALID_CHARS), re.IGNORECASE | re.UNICODE)
-REGEXEN['valid_gTLD'] = re.compile(ur'(?:(?:academy|actor|aero|agency|arpa|asia|bar|bargains|berlin|best|bid|bike|biz|blue|boutique|build|builders|buzz|cab|camera|camp|cards|careers|cat|catering|center|ceo|cheap|christmas|cleaning|clothing|club|codes|coffee|com|community|company|computer|construction|contractors|cool|coop|cruises|dance|dating|democrat|diamonds|directory|domains|edu|education|email|enterprises|equipment|estate|events|expert|exposed|farm|fish|flights|florist|foundation|futbol|gallery|gift|glass|gov|graphics|guitars|guru|holdings|holiday|house|immobilien|industries|info|institute|int|international|jobs|kaufen|kim|kitchen|kiwi|koeln|kred|land|lighting|limo|link|luxury|management|mango|marketing|menu|mil|mobi|moda|monash|museum|nagoya|name|net|neustar|ninja|okinawa|onl|org|partners|parts|photo|photography|photos|pics|pink|plumbing|post|pro|productions|properties|pub|qpon|recipes|red|rentals|repair|report|reviews|rich|ruhr|sexy|shiksha|shoes|singles|social|solar|solutions|supplies|supply|support|systems|tattoo|technology|tel|tienda|tips|today|tokyo|tools|training|travel|uno|vacations|ventures|viajes|villas|vision|vote|voting|voto|voyage|wang|watch|wed|wien|wiki|works|xxx|xyz|zone|дети|онлайн|орг|сайт|بازار|شبكة|みんな|中信|中文网|公司|公>益|在线|我爱你|政务|游戏|移动|网络|集团|삼성)(?=[^0-9a-z]|$))', re.IGNORECASE | re.UNICODE)
-REGEXEN['valid_ccTLD'] = re.compile(ur'(?:(?:ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bl|bm|bn|bo|bq|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cw|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|eh|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|me|mf|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|ss|st|su|sv|sx|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|za|zm|zw|мон|рф|срб|укр|қаз|الاردن|الجزائر|السعودية|المغرب|امارات|ایران|بھارت|تونس|سودان|سورية|عمان|فلسطين|قطر|مصر|مليسيا|پاکستان|भारत|বাংলা|ভারত|ਭਾਰਤ|ભારત|இந்தியா|இலங்கை|சிங்கப்பூர்|భారత్|ලංකා|ไทย|გე|中国|中加坡|湾|台灣|新香港|한국)(?=[^0-9a-z]|$))', re.IGNORECASE | re.UNICODE)
-REGEXEN['valid_punycode'] = re.compile(ur'(?:xn--[0-9a-z]+)', re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_url_preceding_chars'] = re.compile(r'(?:[^A-Z0-9@＠$#＃%s]|^)' % r''.join(REGEXEN['invalid_control_characters']), re.IGNORECASE | re.UNICODE)
+REGEXEN['invalid_url_without_protocol_preceding_chars'] = re.compile(r'[-_.\/]$')
+DOMAIN_VALID_CHARS = r'[^%s%s%s%s%s]' % (PUNCTUATION_CHARS, SPACE_CHARS, CTRL_CHARS, r''.join(REGEXEN['invalid_control_characters']), r''.join(UNICODE_SPACES))
+REGEXEN['valid_subdomain'] = re.compile(r'(?:(?:%s(?:[_-]|%s)*)?%s\.)' % (DOMAIN_VALID_CHARS, DOMAIN_VALID_CHARS, DOMAIN_VALID_CHARS), re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_domain_name'] = re.compile(r'(?:(?:%s(?:[-]|%s)*)?%s\.)' % (DOMAIN_VALID_CHARS, DOMAIN_VALID_CHARS, DOMAIN_VALID_CHARS), re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_gTLD'] = re.compile(r'(?:(?:academy|actor|aero|agency|arpa|asia|bar|bargains|berlin|best|bid|bike|biz|blue|boutique|build|builders|buzz|cab|camera|camp|cards|careers|cat|catering|center|ceo|cheap|christmas|cleaning|clothing|club|codes|coffee|com|community|company|computer|construction|contractors|cool|coop|cruises|dance|dating|democrat|diamonds|directory|domains|edu|education|email|enterprises|equipment|estate|events|expert|exposed|farm|fish|flights|florist|foundation|futbol|gallery|gift|glass|gov|graphics|guitars|guru|holdings|holiday|house|immobilien|industries|info|institute|int|international|jobs|kaufen|kim|kitchen|kiwi|koeln|kred|land|lighting|limo|link|luxury|management|mango|marketing|menu|mil|mobi|moda|monash|museum|nagoya|name|net|neustar|ninja|okinawa|onl|org|partners|parts|photo|photography|photos|pics|pink|plumbing|post|pro|productions|properties|pub|qpon|recipes|red|rentals|repair|report|reviews|rich|ruhr|sexy|shiksha|shoes|singles|social|solar|solutions|supplies|supply|support|systems|tattoo|technology|tel|tienda|tips|today|tokyo|tools|training|travel|uno|vacations|ventures|viajes|villas|vision|vote|voting|voto|voyage|wang|watch|wed|wien|wiki|works|wtf|xxx|xyz|zone|дети|онлайн|орг|сайт|بازار|شبكة|みんな|中信|中文网|公司|公>益|在线|我爱你|政务|游戏|移动|网络|集团|삼성)(?=[^0-9a-z]|$))', re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_ccTLD'] = re.compile(r'(?:(?:ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cs|cu|cv|cx|cy|cz|dd|de|dj|dk|dm|do|dz|ec|ee|eg|eh|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|me|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|ss|st|su|sv|sx|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|za|zm|zw)(?=[^0-9a-z]|$))', re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_punycode'] = re.compile(r'(?:xn--[0-9a-z]+)', re.IGNORECASE | re.UNICODE)
 
-REGEXEN['valid_domain'] = re.compile(ur'(?:%s*%s(?:%s|%s|%s))' % (REGEXEN['valid_subdomain'].pattern, REGEXEN['valid_domain_name'].pattern, REGEXEN['valid_gTLD'].pattern, REGEXEN['valid_ccTLD'].pattern, REGEXEN['valid_punycode'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_domain'] = re.compile(r'(?:%s*%s(?:%s|%s|%s))' % (REGEXEN['valid_subdomain'].pattern, REGEXEN['valid_domain_name'].pattern, REGEXEN['valid_gTLD'].pattern, REGEXEN['valid_ccTLD'].pattern, REGEXEN['valid_punycode'].pattern), re.IGNORECASE | re.UNICODE)
 
 # This is used in Extractor
-REGEXEN['valid_ascii_domain'] = re.compile(ur'(?:(?:[A-Za-z0-9\-_]|[%s])+\.)+(?:%s|%s|%s)' % (REGEXEN['latin_accents'].pattern, REGEXEN['valid_gTLD'].pattern, REGEXEN['valid_ccTLD'].pattern, REGEXEN['valid_punycode'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_ascii_domain'] = re.compile(r'(?:(?:[A-Za-z0-9\-_]|[%s])+\.)+(?:%s|%s|%s)' % (REGEXEN['latin_accents'].pattern, REGEXEN['valid_gTLD'].pattern, REGEXEN['valid_ccTLD'].pattern, REGEXEN['valid_punycode'].pattern), re.IGNORECASE | re.UNICODE)
 
 # This is used in Extractor for stricter t.co URL extraction
-REGEXEN['valid_tco_url'] = re.compile(ur'^https?:\/\/t\.co\/[a-z0-9]+', re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_tco_url'] = re.compile(r'^https?:\/\/t\.co\/[a-z0-9]+', re.IGNORECASE | re.UNICODE)
 
 # This is used in Extractor to filter out unwanted URLs.
-REGEXEN['invalid_short_domain'] = re.compile(ur'\A%s%s\Z' % (REGEXEN['valid_domain_name'].pattern, REGEXEN['valid_ccTLD'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['invalid_short_domain'] = re.compile(r'\A%s%s\Z' % (REGEXEN['valid_domain_name'].pattern, REGEXEN['valid_ccTLD'].pattern), re.IGNORECASE | re.UNICODE)
 
-REGEXEN['valid_port_number'] = re.compile(ur'[0-9]+')
+REGEXEN['valid_port_number'] = re.compile(r'[0-9]+')
 
-REGEXEN['valid_general_url_path_chars'] = re.compile(ur"[a-z0-9!\*';:=\+\,\.\$\/%%#\[\]\-_~&|@%s]" % LATIN_ACCENTS, re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_general_url_path_chars'] = re.compile(r"[a-z0-9!\*';:=\+\,\.\$\/%%#\[\]\-_~&|@%s]" % LATIN_ACCENTS, re.IGNORECASE | re.UNICODE)
 # Allow URL paths to contain balanced parens
 #  1. Used in Wikipedia URLs like /Primer_(film)
 #  2. Used in IIS sessions like /S(dfd346)/
-REGEXEN['valid_url_balanced_parens'] = re.compile(ur'\(%s+\)' % REGEXEN['valid_general_url_path_chars'].pattern, re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_url_balanced_parens'] = re.compile(r'\(%s+\)' % REGEXEN['valid_general_url_path_chars'].pattern, re.IGNORECASE | re.UNICODE)
 # Valid end-of-path chracters (so /foo. does not gobble the period).
 #   1. Allow =&# for empty URL parameters and other URL-join artifacts
-REGEXEN['valid_url_path_ending_chars'] = re.compile(ur'[a-z0-9=_#\/\+\-%s]|(?:%s)' % (LATIN_ACCENTS, REGEXEN['valid_url_balanced_parens'].pattern), re.IGNORECASE | re.UNICODE)
-REGEXEN['valid_url_path'] = re.compile(ur'(?:(?:%s*(?:%s %s*)*%s)|(?:%s+\/))' % (REGEXEN['valid_general_url_path_chars'].pattern, REGEXEN['valid_url_balanced_parens'].pattern, REGEXEN['valid_general_url_path_chars'].pattern, REGEXEN['valid_url_path_ending_chars'].pattern, REGEXEN['valid_general_url_path_chars'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_url_path_ending_chars'] = re.compile(r'[a-z0-9=_#\/\+\-%s]|(?:%s)' % (LATIN_ACCENTS, REGEXEN['valid_url_balanced_parens'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_url_path'] = re.compile(r'(?:(?:%s*(?:%s %s*)*%s)|(?:%s+\/))' % (REGEXEN['valid_general_url_path_chars'].pattern, REGEXEN['valid_url_balanced_parens'].pattern, REGEXEN['valid_general_url_path_chars'].pattern, REGEXEN['valid_url_path_ending_chars'].pattern, REGEXEN['valid_general_url_path_chars'].pattern), re.IGNORECASE | re.UNICODE)
 
-REGEXEN['valid_url_query_chars'] = re.compile(ur"[a-z0-9!?\*'\(\);:&=\+\$\/%#\[\]\-_\.,~|@]", re.IGNORECASE | re.UNICODE)
-REGEXEN['valid_url_query_ending_chars'] = re.compile(ur'[a-z0-9_&=#\/]', re.IGNORECASE | re.UNICODE)
-REGEXEN['valid_url'] = re.compile(ur'((%s)((https?:\/\/)?(%s)(?::(%s))?(/%s*)?(\?%s*%s)?))' % (
+REGEXEN['valid_url_query_chars'] = re.compile(r"[a-z0-9!?\*'\(\);:&=\+\$\/%#\[\]\-_\.,~|@]", re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_url_query_ending_chars'] = re.compile(r'[a-z0-9_&=#\/]', re.IGNORECASE | re.UNICODE)
+REGEXEN['valid_url'] = re.compile(r'((%s)((https?:\/\/)?(%s)(?::(%s))?(/%s*)?(\?%s*%s)?))' % (
     REGEXEN['valid_url_preceding_chars'].pattern,
     REGEXEN['valid_domain'].pattern,
     REGEXEN['valid_port_number'].pattern,
@@ -227,54 +228,54 @@ REGEXEN['valid_url'] = re.compile(ur'((%s)((https?:\/\/)?(%s)(?::(%s))?(/%s*)?(\
 #   $7 URL Path and anchor
 #   $8 Query String
 
-REGEXEN['cashtag'] = re.compile(ur'[a-z]{1,6}(?:[._][a-z]{1,2})?', re.IGNORECASE)
-REGEXEN['valid_cashtag'] = re.compile(ur'(^|[%s])(\$|＄|﹩)(%s)(?=$|\s|[%s])' % (REGEXEN['spaces'].pattern, REGEXEN['cashtag'].pattern, PUNCTUATION_CHARS), re.IGNORECASE)
+REGEXEN['cashtag'] = re.compile(r'[a-z]{1,6}(?:[._][a-z]{1,2})?', re.IGNORECASE)
+REGEXEN['valid_cashtag'] = re.compile(r'(^|[%s])(\$|＄|﹩)(%s)(?=$|\s|[%s])' % (REGEXEN['spaces'].pattern, REGEXEN['cashtag'].pattern, PUNCTUATION_CHARS), re.IGNORECASE)
 
 # These URL validation pattern strings are based on the ABNF from RFC 3986
-REGEXEN['validate_url_unreserved'] = re.compile(ur'[a-z0-9\-._~]', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_pct_encoded'] = re.compile(ur'(?:%[0-9a-f]{2})', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_sub_delims'] = re.compile(ur"[!$&'()*+,;=]", re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_pchar'] = re.compile(ur'(?:%s|%s|%s|[:\|@])' % (REGEXEN['validate_url_unreserved'].pattern, REGEXEN['validate_url_pct_encoded'].pattern, REGEXEN['validate_url_sub_delims'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_unreserved'] = re.compile(r'[a-z0-9\-._~]', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_pct_encoded'] = re.compile(r'(?:%[0-9a-f]{2})', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_sub_delims'] = re.compile(r"[!$&'()*+,;=]", re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_pchar'] = re.compile(r'(?:%s|%s|%s|[:\|@])' % (REGEXEN['validate_url_unreserved'].pattern, REGEXEN['validate_url_pct_encoded'].pattern, REGEXEN['validate_url_sub_delims'].pattern), re.IGNORECASE | re.UNICODE)
 
-REGEXEN['validate_url_scheme'] = re.compile(ur'(?:[a-z][a-z0-9+\-.]*)', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_userinfo'] = re.compile(ur'(?:%s|%s|%s|:)*' % (REGEXEN['validate_url_unreserved'].pattern, REGEXEN['validate_url_pct_encoded'].pattern, REGEXEN['validate_url_sub_delims'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_scheme'] = re.compile(r'(?:[a-z][a-z0-9+\-.]*)', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_userinfo'] = re.compile(r'(?:%s|%s|%s|:)*' % (REGEXEN['validate_url_unreserved'].pattern, REGEXEN['validate_url_pct_encoded'].pattern, REGEXEN['validate_url_sub_delims'].pattern), re.IGNORECASE | re.UNICODE)
 
-REGEXEN['validate_url_dec_octet'] = re.compile(ur'(?:[0-9]|(?:[1-9][0-9])|(?:1[0-9]{2})|(?:2[0-4][0-9])|(?:25[0-5]))', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_ipv4'] = re.compile(ur'(?:%s(?:\.%s){3})' % (REGEXEN['validate_url_dec_octet'].pattern, REGEXEN['validate_url_dec_octet'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_dec_octet'] = re.compile(r'(?:[0-9]|(?:[1-9][0-9])|(?:1[0-9]{2})|(?:2[0-4][0-9])|(?:25[0-5]))', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_ipv4'] = re.compile(r'(?:%s(?:\.%s){3})' % (REGEXEN['validate_url_dec_octet'].pattern, REGEXEN['validate_url_dec_octet'].pattern), re.IGNORECASE | re.UNICODE)
 
 # Punting on real IPv6 validation for now
-REGEXEN['validate_url_ipv6'] = re.compile(ur'(?:\[[a-f0-9:\.]+\])', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_ipv6'] = re.compile(r'(?:\[[a-f0-9:\.]+\])', re.IGNORECASE | re.UNICODE)
 
 # Also punting on IPvFuture for now
-REGEXEN['validate_url_ip'] = re.compile(ur'(?:%s|%s)' % (REGEXEN['validate_url_ipv4'].pattern, REGEXEN['validate_url_ipv6'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_ip'] = re.compile(r'(?:%s|%s)' % (REGEXEN['validate_url_ipv4'].pattern, REGEXEN['validate_url_ipv6'].pattern), re.IGNORECASE | re.UNICODE)
 
 # This is more strict than the rfc specifies
-REGEXEN['validate_url_subdomain_segment'] = re.compile(ur'(?:[a-z0-9](?:[a-z0-9_\-]*[a-z0-9])?)', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_domain_segment'] = re.compile(ur'(?:[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?)', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_domain_tld'] = re.compile(ur'(?:[a-z](?:[a-z0-9\-]*[a-z0-9])?)', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_domain'] = re.compile(ur'(?:(?:%s\.)*(?:%s\.)%s)' % (REGEXEN['validate_url_subdomain_segment'].pattern, REGEXEN['validate_url_domain_segment'].pattern, REGEXEN['validate_url_domain_tld'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_subdomain_segment'] = re.compile(r'(?:[a-z0-9](?:[a-z0-9_\-]*[a-z0-9])?)', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_domain_segment'] = re.compile(r'(?:[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?)', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_domain_tld'] = re.compile(r'(?:[a-z](?:[a-z0-9\-]*[a-z0-9])?)', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_domain'] = re.compile(r'(?:(?:%s\.)*(?:%s\.)%s)' % (REGEXEN['validate_url_subdomain_segment'].pattern, REGEXEN['validate_url_domain_segment'].pattern, REGEXEN['validate_url_domain_tld'].pattern), re.IGNORECASE | re.UNICODE)
 
-REGEXEN['validate_url_host'] = re.compile(ur'(?:%s|%s)' % (REGEXEN['validate_url_ip'].pattern, REGEXEN['validate_url_domain'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_host'] = re.compile(r'(?:%s|%s)' % (REGEXEN['validate_url_ip'].pattern, REGEXEN['validate_url_domain'].pattern), re.IGNORECASE | re.UNICODE)
 
 # Unencoded internationalized domains - this doesn't check for invalid UTF-8 sequences
-REGEXEN['validate_url_unicode_subdomain_segment'] = re.compile(ur'(?:(?:[a-z0-9]|[^\x00-\x7f])(?:(?:[a-z0-9_\-]|[^\x00-\x7f])*(?:[a-z0-9]|[^\x00-\x7f]))?)', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_unicode_domain_segment'] = re.compile(ur'(?:(?:[a-z0-9]|[^\x00-\x7f])(?:(?:[a-z0-9\-]|[^\x00-\x7f])*(?:[a-z0-9]|[^\x00-\x7f]))?)', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_unicode_domain_tld'] = re.compile(ur'(?:(?:[a-z]|[^\x00-\x7f])(?:(?:[a-z0-9\-]|[^\x00-\x7f])*(?:[a-z0-9]|[^\x00-\x7f]))?)', re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_unicode_domain'] = re.compile(ur'(?:(?:%s\.)*(?:%s\.)%s)' % (REGEXEN['validate_url_unicode_subdomain_segment'].pattern, REGEXEN['validate_url_unicode_domain_segment'].pattern, REGEXEN['validate_url_unicode_domain_tld'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_unicode_subdomain_segment'] = re.compile(r'(?:(?:[a-z0-9]|[^\x00-\x7f])(?:(?:[a-z0-9_\-]|[^\x00-\x7f])*(?:[a-z0-9]|[^\x00-\x7f]))?)', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_unicode_domain_segment'] = re.compile(r'(?:(?:[a-z0-9]|[^\x00-\x7f])(?:(?:[a-z0-9\-]|[^\x00-\x7f])*(?:[a-z0-9]|[^\x00-\x7f]))?)', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_unicode_domain_tld'] = re.compile(r'(?:(?:[a-z]|[^\x00-\x7f])(?:(?:[a-z0-9\-]|[^\x00-\x7f])*(?:[a-z0-9]|[^\x00-\x7f]))?)', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_unicode_domain'] = re.compile(r'(?:(?:%s\.)*(?:%s\.)%s)' % (REGEXEN['validate_url_unicode_subdomain_segment'].pattern, REGEXEN['validate_url_unicode_domain_segment'].pattern, REGEXEN['validate_url_unicode_domain_tld'].pattern), re.IGNORECASE | re.UNICODE)
 
-REGEXEN['validate_url_unicode_host'] = re.compile(ur'(?:%s|%s)' % (REGEXEN['validate_url_ip'].pattern, REGEXEN['validate_url_unicode_domain'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_unicode_host'] = re.compile(r'(?:%s|%s)' % (REGEXEN['validate_url_ip'].pattern, REGEXEN['validate_url_unicode_domain'].pattern), re.IGNORECASE | re.UNICODE)
 
-REGEXEN['validate_url_port'] = re.compile(ur'[0-9]{1,5}')
+REGEXEN['validate_url_port'] = re.compile(r'[0-9]{1,5}')
 
-REGEXEN['validate_url_unicode_authority'] = re.compile(ur'(?:(%s)@)?(%s)(?::(%s))?' % (REGEXEN['validate_url_userinfo'].pattern, REGEXEN['validate_url_unicode_host'].pattern, REGEXEN['validate_url_port'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_unicode_authority'] = re.compile(r'(?:(%s)@)?(%s)(?::(%s))?' % (REGEXEN['validate_url_userinfo'].pattern, REGEXEN['validate_url_unicode_host'].pattern, REGEXEN['validate_url_port'].pattern), re.IGNORECASE | re.UNICODE)
 
-REGEXEN['validate_url_authority'] = re.compile(ur'(?:(%s)@)?(%s)(?::(%s))?' % (REGEXEN['validate_url_userinfo'].pattern, REGEXEN['validate_url_host'].pattern, REGEXEN['validate_url_port'].pattern), re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_authority'] = re.compile(r'(?:(%s)@)?(%s)(?::(%s))?' % (REGEXEN['validate_url_userinfo'].pattern, REGEXEN['validate_url_host'].pattern, REGEXEN['validate_url_port'].pattern), re.IGNORECASE | re.UNICODE)
 
-REGEXEN['validate_url_path'] = re.compile(ur'(/%s*)*' % REGEXEN['validate_url_pchar'].pattern, re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_query'] = re.compile(ur'(%s|/|\?)*' % REGEXEN['validate_url_pchar'].pattern, re.IGNORECASE | re.UNICODE)
-REGEXEN['validate_url_fragment'] = re.compile(ur'(%s|/|\?)*' % REGEXEN['validate_url_pchar'].pattern, re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_path'] = re.compile(r'(/%s*)*' % REGEXEN['validate_url_pchar'].pattern, re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_query'] = re.compile(r'(%s|/|\?)*' % REGEXEN['validate_url_pchar'].pattern, re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_fragment'] = re.compile(r'(%s|/|\?)*' % REGEXEN['validate_url_pchar'].pattern, re.IGNORECASE | re.UNICODE)
 
 # Modified version of RFC 3986 Appendix B
-REGEXEN['validate_url_unencoded'] = re.compile(ur'\A(?:([^:/?#]+)://)?([^/?#]*)([^?#]*)(?:\?([^#]*))?(?:\#(.*))?\Z', re.IGNORECASE | re.UNICODE)
+REGEXEN['validate_url_unencoded'] = re.compile(r'\A(?:([^:/?#]+)://)?([^/?#]*)([^?#]*)(?:\?([^#]*))?(?:\#(.*))?\Z', re.IGNORECASE | re.UNICODE)
 
-REGEXEN['rtl_chars'] = re.compile(ur'[%s]' % RTL_CHARACTERS, re.IGNORECASE | re.UNICODE)
+REGEXEN['rtl_chars'] = re.compile(r'[%s]' % RTL_CHARACTERS, re.IGNORECASE | re.UNICODE)

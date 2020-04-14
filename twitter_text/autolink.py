@@ -306,12 +306,12 @@ class Autolink(object):
         expanded_url = entity.get('expanded_url')
         invisible_tag_attrs = options.get('invisible_tag_attrs', DEFAULT_INVISIBLE_TAG_ATTRS)
 
-        display_url_sans_ellipses = re.sub(ur'…', u'', display_url)
+        display_url_sans_ellipses = re.sub(r'…', '', display_url)
 
         if expanded_url.find(display_url_sans_ellipses) > -1:
             before_display_url, after_display_url = expanded_url.split(display_url_sans_ellipses, 2)
-            preceding_ellipsis = re.search(ur'\A…', display_url)
-            following_ellipsis = re.search(ur'…\z', display_url)
+            preceding_ellipsis = re.search(r'\A…', display_url)
+            following_ellipsis = re.search(r'…\z', display_url)
             if preceding_ellipsis is not None:
                 preceding_ellipsis = preceding_ellipsis.group()
             else:
@@ -344,7 +344,7 @@ class Autolink(object):
             #   …
             # </span>
 
-            return u"<span class='tco-ellipsis'>%s<span %s>&nbsp;</span></span><span %s>%s</span><span class='js-display-url'>%s</span><span %s>%s</span><span class='tco-ellipsis'><span %s>&nbsp;</span>%s</span>" % (preceding_ellipsis, invisible_tag_attrs, invisible_tag_attrs, self._html_escape(before_display_url), self._html_escape(display_url_sans_ellipses), invisible_tag_attrs, self._html_escape(after_display_url), invisible_tag_attrs, following_ellipsis)
+            return "<span class='tco-ellipsis'>%s<span %s>&nbsp;</span></span><span %s>%s</span><span class='js-display-url'>%s</span><span %s>%s</span><span class='tco-ellipsis'><span %s>&nbsp;</span>%s</span>" % (preceding_ellipsis, invisible_tag_attrs, invisible_tag_attrs, self._html_escape(before_display_url), self._html_escape(display_url_sans_ellipses), invisible_tag_attrs, self._html_escape(after_display_url), invisible_tag_attrs, following_ellipsis)
         else:
             return self._html_escape(display_url)
 
@@ -356,13 +356,13 @@ class Autolink(object):
         if REGEXEN['rtl_chars'].search(hashtag):
             hashtag_class += ' rtl'
 
-        href = options.get('hashtag_url_transform', lambda ht: u'%s%s' % (options.get('hashtag_url_base'), ht))(hashtag)
+        href = options.get('hashtag_url_transform', lambda ht: '%s%s' % (options.get('hashtag_url_base'), ht))(hashtag)
 
         html_attrs = {}
         html_attrs.update(options.get('html_attrs', {}))
         html_attrs = {
             'class':    hashtag_class,
-            'title':    u'#%s' % hashtag,
+            'title':    '#%s' % hashtag,
         }
 
         link = self._link_to_text_with_symbol(entity, hashchar, hashtag, href, html_attrs, options)
@@ -372,11 +372,11 @@ class Autolink(object):
         dollar = chars[entity['indices'][0]]
         cashtag = entity['cashtag']
 
-        href = options.get('cashtag_url_transform', lambda ct: u'%s%s' % (options.get('cashtag_url_base'), ct))(cashtag)
+        href = options.get('cashtag_url_transform', lambda ct: '%s%s' % (options.get('cashtag_url_base'), ct))(cashtag)
 
         html_attrs = {
             'class': options.get('cashtag_class'),
-            'title': u'$%s' % cashtag
+            'title': '$%s' % cashtag
         }
         html_attrs.update(options.get('html_attrs', {}))
 
@@ -384,7 +384,7 @@ class Autolink(object):
         return chars[:entity['indices'][0]] + link + chars[entity['indices'][1]:]
 
     def _link_to_screen_name(self, entity, chars, options = {}):
-        name = u'%s%s' % (entity['screen_name'], entity.get('list_slug') or '')
+        name = '%s%s' % (entity['screen_name'], entity.get('list_slug') or '')
         chunk = options.get('link_text_transform', default_transform)(entity, name)
         name = name.lower()
 
@@ -395,30 +395,30 @@ class Autolink(object):
             del(html_attrs['title'])
 
         if entity.get('list_slug') and not options.get('supress_lists'):
-            href = options.get('list_url_transform', lambda sn: u'%s%s' % (options.get('list_url_base'), sn))(name)
+            href = options.get('list_url_transform', lambda sn: '%s%s' % (options.get('list_url_base'), sn))(name)
             html_attrs['class'] = options.get('list_class')
         else:
-            href = options.get('username_url_transform', lambda sn: u'%s%s' % (options.get('username_url_base'), sn))(name)
+            href = options.get('username_url_transform', lambda sn: '%s%s' % (options.get('username_url_base'), sn))(name)
             html_attrs['class'] = options.get('username_class')
 
         link = self._link_to_text_with_symbol(entity, at, chunk, href, html_attrs, options)
         return chars[:entity['indices'][0]] + link + chars[entity['indices'][1]:]
 
     def _link_to_text_with_symbol(self, entity, symbol, text, href, attributes = {}, options = {}):
-        tagged_symbol = u'<%s>%s</%s>' % (options.get('symbol_tag'), symbol, options.get('symbol_tag')) if options.get('symbol_tag') else symbol
+        tagged_symbol = '<%s>%s</%s>' % (options.get('symbol_tag'), symbol, options.get('symbol_tag')) if options.get('symbol_tag') else symbol
         text = self._html_escape(text)
-        tagged_text = u'<%s>%s</%s>' % (options.get('text_with_symbol_tag'), text, options.get('text_with_symbol_tag')) if options.get('text_with_symbol_tag') else text
+        tagged_text = '<%s>%s</%s>' % (options.get('text_with_symbol_tag'), text, options.get('text_with_symbol_tag')) if options.get('text_with_symbol_tag') else text
         if options.get('username_include_symbol') or not REGEXEN['at_signs'].match(symbol):
-            return u'%s' % self._link_to_text(entity, tagged_symbol + tagged_text, href, attributes, options)
+            return '%s' % self._link_to_text(entity, tagged_symbol + tagged_text, href, attributes, options)
         else:
-            return u'%s%s' % (tagged_symbol, self._link_to_text(entity, tagged_text, href, attributes, options))
+            return '%s%s' % (tagged_symbol, self._link_to_text(entity, tagged_text, href, attributes, options))
 
     def _link_to_text(self, entity, text, href, attributes = {}, options = {}):
         attributes['href'] = href
-        if options.get('link_attribute_transform'):
-            attributes = options.get('link_attribute_transform')(entity, attributes)
+        if options.get('link_attributes_transform'):
+            attributes = options.get('link_attributes_transform')(entity, attributes)
         text = options.get('link_text_transform', default_transform)(entity, text)
-        return u'<a %s>%s</a>' % (self._tag_attrs(attributes), text)
+        return '<a %s>%s</a>' % (self._tag_attrs(attributes), text)
 
     def _tag_attrs(self, attributes = {}):
         attrs = []
@@ -428,7 +428,7 @@ class Autolink(object):
                 attrs.append(key)
                 continue
             if type(value) == list:
-                value = u' '.join(value)
-            attrs.append(u'%s="%s"' % (self._html_escape(key), self._html_escape(value)))
+                value = ' '.join(value)
+            attrs.append('%s="%s"' % (self._html_escape(key), self._html_escape(value)))
 
-        return u' '.join(attrs)
+        return ' '.join(attrs)

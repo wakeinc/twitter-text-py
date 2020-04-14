@@ -1,7 +1,7 @@
 # encoding=utf-8
 
 import re
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 from twitter_text.regex import UNICODE_SPACES
 from twitter_text.unicode import force_unicode
@@ -34,14 +34,14 @@ class HitHighlighter(object):
 
         if not hits and kwargs.get('query'):
             stripped_text   =   strip_tags(self.text)
-            for match in re.finditer(ur'%s' % kwargs.get('query'), stripped_text):
+            for match in re.finditer(r'%s' % kwargs.get('query'), stripped_text):
                 hits.append(match.span())
 
         if hits and not type(hits) == list:
             raise Exception('The syntax for the hit_highlight method has changed. You must pass in a list of lists containing the indices of the strings you want to match.')
 
         tag_name = kwargs.get('tag', DEFAULT_HIGHLIGHT_TAG)
-        tags = [u'<%s>' % tag_name, u'</%s>' % tag_name]
+        tags = ['<%s>' % tag_name, '</%s>' % tag_name]
 
         text = self.text
         chunks = re.split(r'[<>]', text)
@@ -58,7 +58,7 @@ class HitHighlighter(object):
                 if index % 2:
                     # we're inside a <tag>
                     continue
-                chunk_start = len(u''.join(text_chunks[0:index / 2]))
+                chunk_start = len(''.join(text_chunks[0:index / 2]))
                 chunk_end = chunk_start + len(chunk)
                 if hit_start >= chunk_start and hit_start < chunk_end:
                     chunk = chunk[:hit_start - chunk_start] + tags[0] + chunk[hit_start - chunk_start:]
@@ -76,8 +76,8 @@ class HitHighlighter(object):
         for index, chunk in enumerate(chunks):
             if index % 2:
                 # we're inside a <tag>
-                result.append(u'<%s>' % chunk)
+                result.append('<%s>' % chunk)
             else:
                 result.append(chunk)
-        self.text = u''.join(result)
+        self.text = ''.join(result)
         return self.text

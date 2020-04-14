@@ -10,8 +10,8 @@ try:
 except:
     pass
 
-parser = argparse.ArgumentParser(description = u'Run the integration tests for twitter_text')
-parser.add_argument('--ignore-narrow-errors', '-i', help = u'Ignore errors caused by narrow builds', default = False, action = 'store_true')
+parser = argparse.ArgumentParser(description = 'Run the integration tests for twitter_text')
+parser.add_argument('--ignore-narrow-errors', '-i', help = 'Ignore errors caused by narrow builds', default = False, action = 'store_true')
 args = parser.parse_args()
 
 try:
@@ -22,8 +22,8 @@ except ImportError:
 from yaml import Loader, SafeLoader
 def construct_yaml_str(self, node):
     return self.construct_scalar(node)
-Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
-SafeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+Loader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
+SafeLoader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
 
 try:
     from bs4 import BeautifulSoup
@@ -34,10 +34,10 @@ except ImportError:
         raise Exception('You need to install BeautifulSoup to run the tests')
 
 def success(text):
-    return (u'\033[92m%s\033[0m\n' % text).encode('utf-8')
+    return ('\033[92m%s\033[0m\n' % text).encode('utf-8')
 
 def error(text):
-    return (u'\033[91m%s\033[0m\n' % text).encode('utf-8')
+    return ('\033[91m%s\033[0m\n' % text).encode('utf-8')
 
 attempted = 0
 
@@ -45,15 +45,15 @@ def assert_equal_without_attribute_order(result, test, failure_message = None):
     global attempted
     attempted += 1
     # Beautiful Soup sorts the attributes for us so we can skip all the hoops the ruby version jumps through
-    assert BeautifulSoup(result) == BeautifulSoup(test.get('expected')), error(u'Test %d Failed: %s' % (attempted, test.get('description')))
-    sys.stdout.write(success(u'Test %d Passed: %s' % (attempted, test.get('description'))))
+    assert BeautifulSoup(result) == BeautifulSoup(test.get('expected')), error('Test %d Failed: %s' % (attempted, test.get('description')))
+    sys.stdout.write(success('Test %d Passed: %s' % (attempted, test.get('description'))))
     sys.stdout.flush()
 
 def assert_equal(result, test):
     global attempted
     attempted += 1
-    assert result == test.get('expected'), error(u'\nTest %d Failed: %s%s' % (attempted, test.get('description'), u'\n%s' % test.get('hits') if test.get('hits') else ''))
-    sys.stdout.write(success(u'Test %d Passed: %s' % (attempted, test.get('description'))))
+    assert result == test.get('expected'), error('\nTest %d Failed: %s%s' % (attempted, test.get('description'), '\n%s' % test.get('hits') if test.get('hits') else ''))
+    sys.stdout.write(success('Test %d Passed: %s' % (attempted, test.get('description'))))
     sys.stdout.flush()
 
 # extractor section
@@ -150,7 +150,7 @@ validate_tests = None
 try:
     validate_file = open(os.path.join('twitter-text-conformance', 'validate.yml'), 'r')
     validate_file_contents = validate_file.read()
-    validate_tests = yaml.load(re.sub(ur'\\n', '\n', validate_file_contents.encode('unicode-escape')))
+    validate_tests = yaml.load(re.sub(r'\\n', '\n', validate_file_contents.encode('unicode-escape')))
     validate_file.close()
 except ValueError:
     sys.stdout.write('\nValidation tests were skipped because of wide character issues\n')
@@ -175,6 +175,6 @@ if validate_tests:
             elif section == 'urls':
                 assert_equal(validator.valid_url(), test)
 
-sys.stdout.write(u'\033[0m-------\n\033[92m%d tests passed.\033[0m\n' % attempted)
+sys.stdout.write('\033[0m-------\n\033[92m%d tests passed.\033[0m\n' % attempted)
 sys.stdout.flush()
 sys.exit(os.EX_OK)
